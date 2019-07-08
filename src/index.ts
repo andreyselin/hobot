@@ -4,7 +4,7 @@ import { IContext } from "./BotModel";
 
 
 // Paste your token to try basic bot functionality
-const token = '864069020:AAElEX_6ZHLzIo0BfKNjVx_7SJvzfzocDdc';
+const token = '___YOUR_TOKEN_HERE___';
 
 // Running bot wrapper
 const botServer = new BotServer(token);
