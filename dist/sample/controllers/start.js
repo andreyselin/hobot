@@ -49,7 +49,7 @@ exports.startController = {
     post: function (ctx, updateType) { return __awaiter(_this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, ctx.replyWithHTML('This is triggered when you pressed start button or enterde /start command')];
+                case 0: return [4 /*yield*/, ctx.replyWithHTML('This is triggered when you pressed start button or entered /start command')];
                 case 1:
                     _a.sent();
                     index_1.hobot.gotoPath(ctx, '/second', { passedProperty: 'passedProperty' });
