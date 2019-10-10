@@ -1,7 +1,7 @@
 import { IController, IContext, IUpdateType } from "./BotModel";
 import Telegraf from "telegraf";
 import session from "telegraf/session";
-import TelegrafI18n from "telegraf-i18n";
+// import TelegrafI18n from "telegraf-i18n";
 
 
 const updateTypes: { [ key in IUpdateType ]: key } = {
@@ -63,7 +63,7 @@ export class BotServer {
             get: async (ctx, data?: any) => {
                 console.log('get:', path, data);
                 ctx.session.path = path;
-                ctx.i18n.locale('ru');
+                // ctx.i18n.locale('ru');
                 get(ctx, data);
             },
             post: async (ctx, updateType: IUpdateType) => {
@@ -79,12 +79,13 @@ export class BotServer {
         this.bot = new Telegraf(token);
         this.bot.use(session());
 
-        this.i18n = new TelegrafI18n({
-            useSession: true,
-            defaultLanguage: 'en',
-            directory: __dirname+'/locales'
-        });
-        this.bot.use(this.i18n.middleware());
+        // TODO: Do through config:
+        // this.i18n = new TelegrafI18n({
+        //     useSession: true,
+        //     defaultLanguage: 'en',
+        //     directory: __dirname+'/locales'
+        // });
+        // this.bot.use(this.i18n.middleware());
 
         // /Move
 

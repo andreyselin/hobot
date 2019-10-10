@@ -2,17 +2,16 @@
   "name": "matching-bot",
   "version": "0.0.1",
   "description": "Telegram bot for matching different requests and responses",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "start": "npm run build:live",
-    "build": "tsc -p . --lib es2017 --outDir dist && npm run dist-locales",
-    "dist-locales": "cp -a ./src/locales/ ./dist/locales",
-    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-    "tmp": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/tmp.ts"
+    "build": "tsc -p . --lib es2017 --outDir dist",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "keywords": [
-    "matching",
-    "telegram"
+    "telegram",
+    "bot",
+    "chatbot"
   ],
   "author": "Andrey Selin",
   "license": "SEE LICENSE IN LICENCE",
