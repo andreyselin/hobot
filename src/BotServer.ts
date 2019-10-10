@@ -25,6 +25,8 @@ export class BotServer {
     bot: any;
     i18n: any;
 
+    updateTypes = updateTypes;
+
     processUpdate (ctx: IContext, updateType: IUpdateType) {
         try {
             if (!ctx.session.path) {

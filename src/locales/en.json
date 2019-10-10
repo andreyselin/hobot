@@ -1,9 +1,0 @@
-{
-	"controllers": {
-		"start": {
-			"welcomeMessage": "controllers.start.welcomeMessage",
-			"placeRequest": "controllers.start.placeRequest",
-			"listMyRequests": "controllers.start.listMyRequests"
-		}
-	}
-}

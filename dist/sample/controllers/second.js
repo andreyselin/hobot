@@ -36,16 +36,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
+var index_1 = require("../index");
 // Example controller
-exports.startController = {
-    path: '/start',
+exports.secondController = {
+    path: '/second',
     get: function (ctx) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-        // You wont see this since start command only accepts updates, it doest show any initial state.
-        // But if you assign this code to a new controller and navigate to it with botServer.gotoPath,
-        // you will ses this line as a result of navigation
-        return [2 /*return*/, ctx.replyWithHTML('Alright, this is default controller!')];
+        return [2 /*return*/, ctx.replyWithHTML('Alright, this is second controller!')];
     }); }); },
-    post: function (ctx, updateType) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-        return [2 /*return*/, ctx.replyWithHTML('You posted update')];
-    }); }); }
+    post: function (ctx, updateType) { return __awaiter(_this, void 0, void 0, function () {
+        var text;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, ctx.replyWithHTML('You posted this type of update: ' + updateType)];
+                case 1:
+                    _a.sent();
+                    if (!(updateType === index_1.hobot.updateTypes.text)) return [3 /*break*/, 3];
+                    text = ctx.update.message.text;
+                    return [4 /*yield*/, ctx.replyWithHTML('You posted text:\n' + text)];
+                case 2:
+                    _a.sent();
+                    _a.label = 3;
+                case 3: return [2 /*return*/];
+            }
+        });
+    }); }
 };

@@ -52,6 +52,7 @@ var updateTypes = {
 var BotServer = /** @class */ (function () {
     function BotServer(token) {
         this.routes = {};
+        this.updateTypes = updateTypes;
         this.createRoute = this.createRoute.bind(this);
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath = this.gotoPath.bind(this);
