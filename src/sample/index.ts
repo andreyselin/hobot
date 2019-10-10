@@ -5,7 +5,7 @@ import { secondController } from "./controllers/second";
 
 
 // Paste your token to try basic bot functionality
-const token = '844657353:AAGjlz-irZ4-mN7BmymEq-pXHTybhWUDm0w';
+const token = '__YOUR_TELEGRAM_TOKEN__';
 
 // Running bot wrapper
 export const hobot = new Hobot(token);
