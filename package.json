@@ -1,7 +1,7 @@
 {
-  "name": "matching-bot",
+  "name": "hobot",
   "version": "0.0.1",
-  "description": "Telegram bot for matching different requests and responses",
+  "description": "Framework for easier development of complex chat bots",
   "main": "dist/index.js",
   "scripts": {
     "start": "npm run build:live",

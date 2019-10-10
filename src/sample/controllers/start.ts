@@ -14,7 +14,7 @@ export const startController: IController = {
 
     post: async (ctx, updateType) => {
 
-        await ctx.replyWithHTML('This is triggered when you pressed start button or enterde /start command');
+        await ctx.replyWithHTML('This is triggered when you pressed start button or entered /start command');
         hobot.gotoPath(ctx, '/second', { passedProperty: 'passedProperty' });
 
     }
