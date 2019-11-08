@@ -1,7 +1,6 @@
 import { IController, IContext, IUpdateType } from "./BotModel";
-import Telegraf from "telegraf";
 import session from "telegraf/session";
-// import TelegrafI18n from "telegraf-i18n";
+import TelegrafI18n from "telegraf-i18n";
 
 
 const updateTypes: { [ key in IUpdateType ]: key } = {
@@ -13,15 +12,37 @@ const updateTypes: { [ key in IUpdateType ]: key } = {
     photo: 'photo'
 };
 
+interface BotServerConfig {
+    i18n: {
+        use: boolean;
+        default: 'en' | 'ru';
+        path: string;
+    }
+}
+
 export class BotServer {
-    constructor (token) {
+    constructor (bot: any, config: BotServerConfig) {
+        this.bot = bot;
+        this.bot.use(session());
+
+        if (config.i18n.use) {
+            const i18n = new TelegrafI18n({
+                useSession: true,
+                defaultLanguage: config.i18n.default,
+                directory: config.i18n.path
+            });
+            this.bot.use(i18n.middleware());
+        }
+
         this.createRoute   = this.createRoute.bind(this);
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath      = this.gotoPath.bind(this);
-        this.canalize.bind(this)(token);
+        this.canalize.call(this);
+
+        this.bot.launch();
     }
 
-    routes: { [key: string]: IController } = {};
+    routes: { [ key: string ]: IController } = {};
     bot: any;
     i18n: any;
 
@@ -60,7 +81,7 @@ export class BotServer {
     // }
 
     createRoute ({ path, get, post }: IController) {
-        this.routes[path] = {
+        this.routes[ path ] = {
             path,
             get: async (ctx, data?: any) => {
                 console.log('get:', path, data);
@@ -73,33 +94,16 @@ export class BotServer {
                 post(ctx, updateType);
             }
         };
-        console.log('path created:', path);
+        console.log('-> Path created:', path);
     }
 
-    async canalize (token) {
-
-        this.bot = new Telegraf(token);
-        this.bot.use(session());
-
-        // TODO: Do through config:
-        // this.i18n = new TelegrafI18n({
-        //     useSession: true,
-        //     defaultLanguage: 'en',
-        //     directory: __dirname+'/locales'
-        // });
-        // this.bot.use(this.i18n.middleware());
-
-        // /Move
-
+    async canalize () {
         this.bot.on(updateTypes.location,      (ctx: IContext) => this.processUpdate(ctx, updateTypes.location));
         this.bot.on(updateTypes.photo,         (ctx: IContext) => this.processUpdate(ctx, updateTypes.photo));
         this.bot.on(updateTypes.callback_query,(ctx: IContext) => this.processUpdate(ctx, updateTypes.callback_query));
         this.bot.on(updateTypes.inline_query,  (ctx: IContext) => this.processUpdate(ctx, updateTypes.inline_query));
         this.bot.on(updateTypes.text,          (ctx: IContext) => this.processUpdate(ctx, updateTypes.text));
         this.bot.on(updateTypes.document,      (ctx: IContext) => this.processUpdate(ctx, updateTypes.document));
-
-        this.bot.launch();
-        console.log('123');
     }
 
 }

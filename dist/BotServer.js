@@ -38,9 +38,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var telegraf_1 = __importDefault(require("telegraf"));
 var session_1 = __importDefault(require("telegraf/session"));
-// import TelegrafI18n from "telegraf-i18n";
+var telegraf_i18n_1 = __importDefault(require("telegraf-i18n"));
 var updateTypes = {
     document: 'document',
     text: 'text',
@@ -50,13 +49,24 @@ var updateTypes = {
     photo: 'photo'
 };
 var BotServer = /** @class */ (function () {
-    function BotServer(token) {
+    function BotServer(bot, config) {
         this.routes = {};
         this.updateTypes = updateTypes;
+        this.bot = bot;
+        this.bot.use(session_1.default());
+        if (config.i18n.use) {
+            var i18n = new telegraf_i18n_1.default({
+                useSession: true,
+                defaultLanguage: config.i18n.default,
+                directory: config.i18n.path
+            });
+            this.bot.use(i18n.middleware());
+        }
         this.createRoute = this.createRoute.bind(this);
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath = this.gotoPath.bind(this);
-        this.canalize.bind(this)(token);
+        this.canalize.call(this);
+        this.bot.launch();
     }
     BotServer.prototype.processUpdate = function (ctx, updateType) {
         try {
@@ -110,30 +120,18 @@ var BotServer = /** @class */ (function () {
                 });
             }); }
         };
-        console.log('path created:', path);
+        console.log('-> Path created:', path);
     };
-    BotServer.prototype.canalize = function (token) {
+    BotServer.prototype.canalize = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                this.bot = new telegraf_1.default(token);
-                this.bot.use(session_1.default());
-                // TODO: Do through config:
-                // this.i18n = new TelegrafI18n({
-                //     useSession: true,
-                //     defaultLanguage: 'en',
-                //     directory: __dirname+'/locales'
-                // });
-                // this.bot.use(this.i18n.middleware());
-                // /Move
                 this.bot.on(updateTypes.location, function (ctx) { return _this.processUpdate(ctx, updateTypes.location); });
                 this.bot.on(updateTypes.photo, function (ctx) { return _this.processUpdate(ctx, updateTypes.photo); });
                 this.bot.on(updateTypes.callback_query, function (ctx) { return _this.processUpdate(ctx, updateTypes.callback_query); });
                 this.bot.on(updateTypes.inline_query, function (ctx) { return _this.processUpdate(ctx, updateTypes.inline_query); });
                 this.bot.on(updateTypes.text, function (ctx) { return _this.processUpdate(ctx, updateTypes.text); });
                 this.bot.on(updateTypes.document, function (ctx) { return _this.processUpdate(ctx, updateTypes.document); });
-                this.bot.launch();
-                console.log('123');
                 return [2 /*return*/];
             });
         });
