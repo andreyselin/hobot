@@ -1,6 +1,6 @@
 {
   "name": "hobot",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Framework for easier development of complex chat bots",
   "main": "dist/index.js",
   "scripts": {
