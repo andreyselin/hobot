@@ -1,0 +1,7 @@
+version: "2"
+services:
+  hobot:
+    container_name: hobot
+    build: .
+    volumes:
+      - .:/var/www/server

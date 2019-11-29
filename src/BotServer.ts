@@ -1,7 +1,5 @@
 import { IController, IContext, IUpdateType } from "./BotModel";
 import session from "telegraf/session";
-import TelegrafI18n from "telegraf-i18n";
-
 
 const updateTypes: { [ key in IUpdateType ]: key } = {
     document: 'document',
@@ -12,60 +10,64 @@ const updateTypes: { [ key in IUpdateType ]: key } = {
     photo: 'photo'
 };
 
-interface BotServerConfig {
-    i18n: {
-        use: boolean;
-        default: 'en' | 'ru';
-        path: string;
-    }
+
+export interface IHobotConfig {
+    defaultPath: string;
+    commands: { command: string, path: string }[];
+    preCall?: (ctx) => Promise<any>
 }
 
+
 export class BotServer {
-    constructor (bot: any, config: BotServerConfig) {
-        this.bot = bot;
+    constructor (bot: any, config: IHobotConfig) {
+        this.middlewares = [];
+		this.bot = bot;
         this.bot.use(session());
-
-        if (config.i18n.use) {
-            const i18n = new TelegrafI18n({
-                useSession: true,
-                defaultLanguage: config.i18n.default,
-                directory: config.i18n.path
-            });
-            this.bot.use(i18n.middleware());
-        }
-
         this.createRoute   = this.createRoute.bind(this);
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath      = this.gotoPath.bind(this);
-        this.canalize.call(this);
-
-        this.bot.launch();
+        this.canalize.call(this, config);
+        this.preCall = config.preCall
+            ? config.preCall.bind(this)
+            : this.preCall.bind(this);
     }
+    use(fn) {
+        this.middlewares.push(fn);
+    }
+    async executeMiddleware(middlewares, ctx, type, next) {
+        const composition = await middlewares.reduceRight((next, fn) => async () => {
+            // collect next data
+            await fn(ctx, type, next)
+        }, next);       
+        composition(ctx, type);
+    }
+    async preCall (ctx) {}
 
     routes: { [ key: string ]: IController } = {};
+    middlewares: any[];
     bot: any;
     i18n: any;
 
     updateTypes = updateTypes;
 
-    processUpdate (ctx: IContext, updateType: IUpdateType) {
+    async processUpdate (ctx: IContext, updateType: IUpdateType) { //
         try {
-            if (!ctx.session.path) {
-                ctx.session.path = '/start';
-            }
-            this.routes[ctx.session.path].post(ctx, updateType);
+			await this.executeMiddleware(this.middlewares, ctx, 'post', async (ctx, next) => {
+				await this.routes[ctx.session.path].post(ctx, updateType);
+			});
         } catch (e) {
-            console.log('Error at processMessage', '\n', e);
+            this.logWithChatId(ctx.chat.id, 'Error at processMessage', '\n', e);
         }
     }
 
-    gotoPath (ctx: IContext, path: string, data?: any) {
+    async gotoPath (ctx: IContext, path: string, data?: any) {
         // Handle there is no path (got when the app has been restarted and keyboard button is pressed)
-
         try {
-            this.routes[path].get(ctx, data);
+			await this.executeMiddleware(this.middlewares, ctx, 'get', async (ctx, next) => {
+				await this.routes[path].get(ctx, data);
+			});
         } catch (e) {
-            console.log('Error at gotoPath:', path, '\n', e);
+            this.logWithChatId(ctx.chat.id, 'Error at gotoPath:', path, '\n', e);
         }
     }
 
@@ -75,7 +77,7 @@ export class BotServer {
     //         await this.bot.telegram.sendMessage(user.chatId, this.i18n.t('ru' /*user.language*/, message));
     //         return true;
     //     } catch (e) {
-    //         console.log('Error when initiate sending:', e);
+    //         this.log('Error when initiate sending:', e);
     //         return false;
     //     }
     // }
@@ -84,26 +86,59 @@ export class BotServer {
         this.routes[ path ] = {
             path,
             get: async (ctx, data?: any) => {
-                console.log('get:', path, data);
+                await this.preCall(ctx);
+                this.logWithChatId(ctx.chat.id, `get:path:${ path }/get:chat_id:${ ctx.chat.id }, data: ${ data }`);
                 ctx.session.path = path;
                 // ctx.i18n.locale('ru');
                 get(ctx, data);
             },
             post: async (ctx, updateType: IUpdateType) => {
-                console.log('post:', path, updateType);
-                post(ctx, updateType);
+                await this.preCall(ctx);
+                this.logWithChatId(ctx.chat.id, `post:path:${ path }/post:chat_id:${ ctx.chat.id }, updateType: ${ updateType }`);
+
+                switch (updateType) {
+                    case updateTypes.document:
+                        this.logWithChatId(ctx.chat.id, ' ==> document:', ctx.update.message.document, ctx.update.message.caption || '');
+                        break;
+                    case updateTypes.text:
+                        this.logWithChatId(ctx.chat.id, ' ==> message.text:', ctx.update.message.text);
+                        break;
+                    case updateTypes.callback_query:
+                        this.logWithChatId(ctx.chat.id, ' ==> data:', ctx.update.callback_query.data);
+                        break;
+                    default:
+                        this.logWithChatId(ctx.chat.id, ' ==> ctx.update:', ctx.update);
+                        break;
+                }
+
+                await post(ctx, updateType);
             }
         };
-        console.log('-> Path created:', path);
+        this.log('-> Path created:', path);
     }
 
-    async canalize () {
+    canalize (config: IHobotConfig) {
+        this.bot.start(ctx => this.gotoPath(ctx, config.defaultPath));
+
+        config && config.commands && config.commands.forEach(command =>
+            this.bot.command(command.command, (ctx) => this.gotoPath(ctx, command.path)));
+
         this.bot.on(updateTypes.location,      (ctx: IContext) => this.processUpdate(ctx, updateTypes.location));
         this.bot.on(updateTypes.photo,         (ctx: IContext) => this.processUpdate(ctx, updateTypes.photo));
         this.bot.on(updateTypes.callback_query,(ctx: IContext) => this.processUpdate(ctx, updateTypes.callback_query));
         this.bot.on(updateTypes.inline_query,  (ctx: IContext) => this.processUpdate(ctx, updateTypes.inline_query));
         this.bot.on(updateTypes.text,          (ctx: IContext) => this.processUpdate(ctx, updateTypes.text));
         this.bot.on(updateTypes.document,      (ctx: IContext) => this.processUpdate(ctx, updateTypes.document));
+    }
+
+    // Not binded
+    log (...args){
+        console.log.apply(null, [ new Date(), ...args ]);
+    }
+
+    // Not binded
+    logWithChatId (chatId: number, ...args: any[]) {
+        console.log.apply(null, [ new Date(), { chatId }, ...args ]);
     }
 
 }
