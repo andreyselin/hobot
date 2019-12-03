@@ -14,7 +14,8 @@ const updateTypes: { [ key in IUpdateType ]: key } = {
 export interface IHobotConfig {
     defaultPath: string;
     commands: { command: string, path: string }[];
-    preCall?: (ctx) => Promise<any>
+    controllers: IController[];
+    preCall?: (ctx) => Promise<any>;
 }
 
 
@@ -27,6 +28,10 @@ export class BotServer {
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath      = this.gotoPath.bind(this);
         this.canalize.call(this, config);
+
+        config.controllers.forEach(controller =>
+            this.createRoute(controller));
+
         this.preCall = config.preCall
             ? config.preCall.bind(this)
             : this.preCall.bind(this);
@@ -50,10 +55,26 @@ export class BotServer {
 
     updateTypes = updateTypes;
 
+    resolvePath (ctx: IContext, updateType: IUpdateType) {
+        if (updateType === updateTypes.callback_query) {
+            if (/^global:.*/.test(ctx.callbackQuery.data)) {
+                const [path, preData] = ctx.callbackQuery.data.replace(/^global:/, '').split('|', 2)
+                try {
+                    const data = JSON.parse(preData)
+                    return {path, data}
+                } catch (e) {
+                    console.log(e)
+                }
+            }
+        }
+        return {path: ctx.session.path, data: null}
+    }
+
     async processUpdate (ctx: IContext, updateType: IUpdateType) { //
         try {
 			await this.executeMiddleware(this.middlewares, ctx, 'post', async (ctx, next) => {
-				await this.routes[ctx.session.path].post(ctx, updateType);
+                            const {path, data} = this.resolvePath(ctx, updateType)
+                            await this.routes[path].post(ctx, updateType, data);
 			});
         } catch (e) {
             this.logWithChatId(ctx.chat.id, 'Error at processMessage', '\n', e);
@@ -82,17 +103,24 @@ export class BotServer {
     //     }
     // }
 
-    createRoute ({ path, get, post }: IController) {
+    createRoute (controller: IController) {
+        const { path, get, post } = controller;
+        controller.hobot = this;
+
         this.routes[ path ] = {
             path,
             get: async (ctx, data?: any) => {
+                try {
                 await this.preCall(ctx);
                 this.logWithChatId(ctx.chat.id, `get:path:${ path }/get:chat_id:${ ctx.chat.id }, data: ${ data }`);
                 ctx.session.path = path;
-                // ctx.i18n.locale('ru');
-                get(ctx, data);
+                    // ctx.i18n.locale('ru'); // Sometimes i18n goes to default 'en' value on some computers
+                    get.call(controller, ctx, data);
+                } catch (e) {
+                    console.log('---');
+                }
             },
-            post: async (ctx, updateType: IUpdateType) => {
+            post: async (ctx, updateType: IUpdateType, data?: any) => {
                 await this.preCall(ctx);
                 this.logWithChatId(ctx.chat.id, `post:path:${ path }/post:chat_id:${ ctx.chat.id }, updateType: ${ updateType }`);
 
@@ -111,9 +139,9 @@ export class BotServer {
                         break;
                 }
 
-                await post(ctx, updateType);
+                await post.call(controller, ctx, updateType, data);
             }
-        };
+        } as IController; // To think: Separate raw and this controller typings
         this.log('-> Path created:', path);
     }
 
