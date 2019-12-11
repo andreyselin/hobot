@@ -1,7 +1,10 @@
+import { BotServer } from "./BotServer";
+
 export interface IController {
-    path: string
-    get: (ctx: IContext, data?: any) => Promise<any>
-    post: (ctx: IContext, updateType: IUpdateType) => Promise<any>
+    path: string;
+    get: (ctx: IContext, data?: any) => Promise<any>;
+    post: (ctx: IContext, updateType: IUpdateType, data?: any) => Promise<any>;
+    hobot: BotServer;
 }
 
 export type IContext = any;
