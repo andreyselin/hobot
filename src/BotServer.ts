@@ -29,16 +29,16 @@ export class BotServer {
         this.gotoPath      = this.gotoPath.bind(this);
         this.canalize.call(this, config);
 
-        config.controllers.forEach(controller =>
-            this.createRoute(controller));
+        Array.isArray(config && config.controllers) && config.controllers
+            .forEach(controller => this.createRoute(controller));
 
-        this.preCall = config.preCall
-            ? config.preCall.bind(this)
-            : this.preCall.bind(this);
+        this.preCall = (config.preCall || this.preCall).bind(this);
     }
+
     use(fn) {
         this.middlewares.push(fn);
     }
+
     async executeMiddleware(middlewares, ctx, type, next) {
         const composition = await middlewares.reduceRight((next, fn) => async () => {
             // collect next data
@@ -57,24 +57,24 @@ export class BotServer {
 
     resolvePath (ctx: IContext, updateType: IUpdateType) {
         if (updateType === updateTypes.callback_query) {
-            if (/^global:.*/.test(ctx.callbackQuery.data)) {
-                const [path, preData] = ctx.callbackQuery.data.replace(/^global:/, '').split('|', 2)
+            if (/^g:.*/.test(ctx.callbackQuery.data)) {
+                const [path, preData] = ctx.callbackQuery.data.replace(/^g:/, '').split('|', 2);
                 try {
-                    const data = JSON.parse(preData)
-                    return {path, data}
+                    const data = JSON.parse(preData);
+                    return { path, data }
                 } catch (e) {
-                    console.log(e)
+                    console.error(e);
                 }
             }
         }
-        return {path: ctx.session.path, data: null}
+        return { path: ctx.session.path, data: null }
     }
 
     async processUpdate (ctx: IContext, updateType: IUpdateType) { //
         try {
 			await this.executeMiddleware(this.middlewares, ctx, 'post', async (ctx, next) => {
-                            const {path, data} = this.resolvePath(ctx, updateType)
-                            await this.routes[path].post(ctx, updateType, data);
+                const { path, data } = this.resolvePath(ctx, updateType);
+                await this.routes[path].post(ctx, updateType, data);
 			});
         } catch (e) {
             this.logWithChatId(ctx.chat.id, 'Error at processMessage', '\n', e);
@@ -111,13 +111,12 @@ export class BotServer {
             path,
             get: async (ctx, data?: any) => {
                 try {
-                await this.preCall(ctx);
-                this.logWithChatId(ctx.chat.id, `get:path:${ path }/get:chat_id:${ ctx.chat.id }, data: ${ data }`);
-                ctx.session.path = path;
-                    // ctx.i18n.locale('ru'); // Sometimes i18n goes to default 'en' value on some computers
+                    await this.preCall(ctx);
+                    this.logWithChatId(ctx.chat.id, `get:path:${ path }/get:chat_id:${ ctx.chat.id }, data: ${ data }`);
+                    ctx.session.path = path;
                     get.call(controller, ctx, data);
                 } catch (e) {
-                    console.log('---');
+                    console.error(e);
                 }
             },
             post: async (ctx, updateType: IUpdateType, data?: any) => {
@@ -141,7 +140,7 @@ export class BotServer {
 
                 await post.call(controller, ctx, updateType, data);
             }
-        } as IController; // To think: Separate raw and this controller typings
+        } as IController; // To think of: Separate raw and this controller typings
         this.log('-> Path created:', path);
     }
 

@@ -1,13 +1,11 @@
 {
   "name": "hobot",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Framework for easier development of complex chat bots",
   "main": "dist/index.js",
   "scripts": {
-    "sample": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/sample/index.ts",
-    "ping-pong": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/sample-ping-pong/index.ts",
     "start": "npm run build:live",
-    "build": "tsc -p . --lib es2017 --outDir dist",
+    "build": "rm -rf dist && tsc -p . --lib es2017 --outDir dist",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "keywords": [
