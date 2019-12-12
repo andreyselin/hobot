@@ -1,20 +1,28 @@
 # Hobot
 
-Hobot is a simple route manager for Telegram. It will help you manage the state of your bot
+Hobot is a simple route manager for Telegram built on top of Telegraf.JS.
+
+It brings structure without reducing the flexibility of bot development.
 
 ## Installation
 
-Install the dependencies and devDependencies and start the server.
-
 ```sh
-$ npm install -s hobot
+$ npm i -s hobot
 ```
 
 ## Ping-pong bot sample
 
 Let's create an elementary bot with two controllers.
-In first it should answer "PONG" if you write "PING" and navigate you to second one if you write "NEXT".
-In second controller it awaits for "BACK" message from you to navigate you back.
+In first it will answer "PONG" if you write "PING" and navigate you to second one if you write "NEXT".
+In second controller it will await for "BACK" message from you to navigate you back.
+
+You need to just copy content of the following files.
+
+Or you can clone final state in playground repo: https://github.com/andreyselin/hobot_sample
+
+In both cases don't forget to paste your token in src/index.ts.
+
+---
 
 Entry point - `src/index.ts`:
 ```
@@ -24,7 +32,7 @@ import { startController } from "./controllers/start";
 import { nextController } from "./controllers/next";
 
 // Paste your token here
-const token = '566877871:AAFPkKg8ii0Q8PZIYB9GUWd5JfkwKaRssyQ';
+const token = 'YOUR_TOKEN';
 const bot = new Telegraf(token);
 
 // Wrapping bot with hobot
@@ -100,12 +108,10 @@ export const nextController = {
 
 ## Running
 
-Insert following commands to your package.json to run bot in terminal or daemon mode:
+Insert following commands to your `package.json` to run bot in terminal or daemon mode:
 ```
 "start": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-"build": "rm -rf dist && tsc -p . --lib es2017 --outDir dist",
+"build": "rm -rf dist && tsc -p . --lib es2017 --outDir dist"
 ```
 
-To run build copy this `tsconfig.json` file: https://github.com/andreyselin/hobot_sample/blob/master/tsconfig.json
-
-Or just use this repository as playground: https://github.com/andreyselin/hobot_sample
+To run build copy this `tsconfig.json` file: https://github.com/andreyselin/hobot_sample/blob/master/tsconfig.json to the root of your project.

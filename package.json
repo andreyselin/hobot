@@ -1,7 +1,7 @@
 {
   "name": "hobot",
-  "version": "0.0.3",
-  "description": "Framework for easier development of complex chat bots",
+  "version": "0.0.4",
+  "description": "Simple routing framework for building up complex chat bots",
   "main": "dist/index.js",
   "scripts": {
     "start": "npm run build:live",
