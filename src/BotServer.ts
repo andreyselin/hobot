@@ -24,6 +24,7 @@ export class BotServer {
         this.middlewares = [];
 		this.bot = bot;
         this.bot.use(session());
+        this.bot.hobot = this;
         this.createRoute   = this.createRoute.bind(this);
         this.processUpdate = this.processUpdate.bind(this);
         this.gotoPath      = this.gotoPath.bind(this);
@@ -43,7 +44,7 @@ export class BotServer {
         const composition = await middlewares.reduceRight((next, fn) => async () => {
             // collect next data
             await fn(ctx, type, next)
-        }, next);       
+        }, next);
         composition(ctx, type);
     }
     async preCall (ctx) {}
@@ -158,14 +159,20 @@ export class BotServer {
         this.bot.on(updateTypes.document,      (ctx: IContext) => this.processUpdate(ctx, updateTypes.document));
     }
 
-    // Not binded
-    log (...args){
+    // Not bound
+    log (...args) {
         console.log.apply(null, [ new Date(), ...args ]);
     }
 
-    // Not binded
+    // Not bound
     logWithChatId (chatId: number, ...args: any[]) {
         console.log.apply(null, [ new Date(), { chatId }, ...args ]);
     }
+
+    // Not bound
+    createPathQuery (route, data) {
+        const res = `g:${ route }|${ JSON.stringify(data) }`;
+        return res.length > 60 ? null : res;
+    };
 
 }
