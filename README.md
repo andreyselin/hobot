@@ -25,6 +25,7 @@ In both cases don't forget to paste your token in src/index.ts.
 ---
 
 Entry point - `src/index.ts`:
+
 ```
 import Telegraf from "telegraf";
 import { Hobot } from "hobot";
@@ -38,6 +39,7 @@ const bot = new Telegraf(token);
 // Wrapping bot with hobot
 export const hobot = new Hobot(bot, {
     defaultPath: 'path_start',
+    sessionMiddleware: session(),
     commands: [
         // Setting controller bound to '/start' path to execute on start command
         { command: 'start', path: 'path_start' }
@@ -109,6 +111,7 @@ export const nextController = {
 ## Running
 
 Insert following commands to your `package.json` to run bot in terminal or daemon mode:
+
 ```
 "start": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
 "build": "rm -rf dist && tsc -p . --lib es2017 --outDir dist"
