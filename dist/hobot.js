@@ -41,14 +41,13 @@ class Hobot {
             }
         });
         this.createRoute = (controller) => {
-            const { path, get, post } = controller;
-            this.routes[path] = {
-                path,
+            this.routes[controller.path] = {
+                path: controller.path,
                 get: ({ ctx, data }) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         yield this.onBeforeGet(ctx);
-                        ctx.session.path = path;
-                        get({ ctx, hobot: this, data });
+                        ctx.session.path = controller.path;
+                        controller.get({ ctx, hobot: this, data });
                     }
                     catch (e) {
                         console.error(e);
@@ -56,7 +55,7 @@ class Hobot {
                 }),
                 post: ({ ctx, updateType, data }) => __awaiter(this, void 0, void 0, function* () {
                     yield this.onBeforePost(ctx);
-                    yield post({ ctx, updateType, hobot: this, data });
+                    yield controller.post({ ctx, updateType, hobot: this, data });
                 }),
             };
         };
