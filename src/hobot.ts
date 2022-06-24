@@ -111,17 +111,14 @@ export class Hobot {
     this.routes[controller.path] = {
       path: controller.path,
       get: async ({ ctx, data }) => {
-        try {
-          await this.onBeforeGet(ctx);
-          ctx.session.path = controller.path;
-          controller.get({ ctx, hobot: this, data });
-        } catch (e) {
-          console.error(e);
-        }
+        await this.onBeforeGet(ctx);
+        ctx.session.path = controller.path;
+        controller.get({ ctx, hobot: this, data });
       },
       post: async ({ ctx, updateType, data }) => {
         await this.onBeforePost(ctx);
-        await controller.post({ ctx, updateType, hobot: this, data });
+        ctx.session.path = controller.path;
+        controller.post({ ctx, updateType, hobot: this, data });
       },
     };
   };

@@ -44,18 +44,14 @@ class Hobot {
             this.routes[controller.path] = {
                 path: controller.path,
                 get: ({ ctx, data }) => __awaiter(this, void 0, void 0, function* () {
-                    try {
-                        yield this.onBeforeGet(ctx);
-                        ctx.session.path = controller.path;
-                        controller.get({ ctx, hobot: this, data });
-                    }
-                    catch (e) {
-                        console.error(e);
-                    }
+                    yield this.onBeforeGet(ctx);
+                    ctx.session.path = controller.path;
+                    controller.get({ ctx, hobot: this, data });
                 }),
                 post: ({ ctx, updateType, data }) => __awaiter(this, void 0, void 0, function* () {
                     yield this.onBeforePost(ctx);
-                    yield controller.post({ ctx, updateType, hobot: this, data });
+                    ctx.session.path = controller.path;
+                    controller.post({ ctx, updateType, hobot: this, data });
                 }),
             };
         };
